@@ -1,98 +1,73 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Trophy, Clock, Zap, TrendingUp, Award } from "lucide-react";
+import { Trophy, TrendingUp, Star, Rocket, Users, Heart, Zap } from "lucide-react";
 import { useAppStore } from "@/lib/store";
+import { usePathname } from "next/navigation";
 
 export function RightSidebar() {
-  const { dailyChallenge, users, nominations } = useAppStore();
+  const { profiles, nominations, badges } = useAppStore();
   const [mounted, setMounted] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  // Hide on profile page
+  if (pathname === "/protected/profile") {
+    return null;
+  }
+
   // Calculate top performers
-  const topPerformers = users
+  const topPerformers = profiles
     .map((user) => ({
       ...user,
       recognitionsReceived: nominations.filter(
-        (n) => n.receiverId === user.id && n.status === "approved",
+        (n) => n.receiver_id === user.id && n.status === "approved",
       ).length,
     }))
     .sort((a, b) => b.recognitionsReceived - a.recognitionsReceived)
     .slice(0, 3);
 
-  // Calculate time until challenge expires
-  const getTimeRemaining = () => {
-    if (!dailyChallenge || !mounted) return "";
-    const now = new Date();
-    const expires = new Date(dailyChallenge.expiresAt);
-    const diff = expires.getTime() - now.getTime();
-    const hours = Math.floor(diff / 3600000);
-    const minutes = Math.floor((diff % 3600000) / 60000);
-    return `${hours}h ${minutes}m`;
-  };
+  // Company values with icons (compact)
+  const companyValues = [
+    { name: "Innovation", icon: <Rocket className="w-3.5 h-3.5" />, color: "text-purple-600", bg: "bg-purple-100" },
+    { name: "Teamwork", icon: <Users className="w-3.5 h-3.5" />, color: "text-blue-600", bg: "bg-blue-100" },
+    { name: "Customer Focus", icon: <Heart className="w-3.5 h-3.5" />, color: "text-pink-600", bg: "bg-pink-100" },
+    { name: "Excellence", icon: <Star className="w-3.5 h-3.5" />, color: "text-amber-600", bg: "bg-amber-100" },
+    { name: "Speed", icon: <Zap className="w-3.5 h-3.5" />, color: "text-green-600", bg: "bg-green-100" },
+  ];
 
   return (
-    <aside className="hidden xl:block w-72 h-screen sticky top-0 p-6 overflow-y-auto scrollbar-thin">
-      {/* Background gradient blob */}
-      <div className="absolute right-0 top-40 w-64 h-64 bg-cyan-600/10 rounded-full blur-3xl pointer-events-none" />
+    <aside className="hidden xl:block w-72 h-[calc(100vh-4rem)] sticky top-16 px-4 py-4 overflow-hidden">
+      {/* Subtle background gradient */}
+      <div className="absolute right-0 top-20 w-48 h-48 bg-purple-100 rounded-full blur-3xl pointer-events-none opacity-40" />
 
-      <div className="space-y-6 relative">
-        {/* Daily Challenge */}
-        {dailyChallenge && (
-          <div className="glass-card border-cyan-500/30">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center">
-                <Zap className="w-4 h-4 text-cyan-400" />
-              </div>
-              <h3 className="font-semibold text-white">Daily Challenge</h3>
-            </div>
-
-            <h4 className="text-lg font-medium text-white mb-2">
-              {dailyChallenge.title}
-            </h4>
-            <p className="text-sm text-gray-400 mb-4">
-              {dailyChallenge.description}
-            </p>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1 text-cyan-400 text-sm">
-                <Award className="w-4 h-4" />
-                <span>+{dailyChallenge.xpReward} XP</span>
-              </div>
-              <div className="flex items-center gap-1 text-gray-500 text-sm">
-                <Clock className="w-3 h-3" />
-                <span>{getTimeRemaining()}</span>
-              </div>
-            </div>
-          </div>
-        )}
-
+      <div className="space-y-4 relative h-full flex flex-col">
         {/* Top Performers */}
-        <div className="glass-card">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
-              <Trophy className="w-4 h-4 text-purple-400" />
+        <div className="glass-card p-4">
+          <div className="flex items-center gap-2.5 mb-3">
+            <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
+              <Trophy className="w-4 h-4 text-purple-600" />
             </div>
-            <h3 className="font-semibold text-white">Top Performers</h3>
+            <h3 className="font-semibold text-gray-900">Top Performers</h3>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             {topPerformers.map((user, index) => (
               <div
                 key={user.id}
-                className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors"
+                className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-purple-50 transition-colors"
               >
                 <div className="relative">
                   <img
-                    src={user.avatar}
-                    alt={user.name}
+                    src={user.avatar_url}
+                    alt={user.username}
                     className="w-10 h-10 rounded-full"
                   />
                   <div
-                    className={`absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold
+                    className={`absolute -top-0.5 -right-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold
                     ${
                       index === 0
                         ? "bg-yellow-500 text-yellow-900"
@@ -105,16 +80,15 @@ export function RightSidebar() {
                   </div>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-white text-sm truncate">
-                    {user.name}
+                  <p className="font-medium text-gray-900 text-sm truncate">
+                    {user.username}
                   </p>
                   <p className="text-xs text-gray-500">{user.department}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-medium text-purple-400">
+                  <p className="text-base font-semibold text-purple-600">
                     {user.recognitionsReceived}
                   </p>
-                  <p className="text-xs text-gray-500">received</p>
                 </div>
               </div>
             ))}
@@ -122,40 +96,63 @@ export function RightSidebar() {
         </div>
 
         {/* Quick Stats */}
-        <div className="glass-card">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center">
-              <TrendingUp className="w-4 h-4 text-green-400" />
+        <div className="glass-card p-4">
+          <div className="flex items-center gap-2.5 mb-3">
+            <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
+              <TrendingUp className="w-4 h-4 text-green-600" />
             </div>
-            <h3 className="font-semibold text-white">This Week</h3>
+            <h3 className="font-semibold text-gray-900">This Week</h3>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="text-center p-3 bg-white/5 rounded-lg">
-              <p className="text-2xl font-bold gradient-text">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="text-center p-3 bg-purple-50 rounded-lg">
+              <p className="text-2xl font-bold text-purple-600">
                 {nominations.filter((n) => n.status === "approved").length}
               </p>
               <p className="text-xs text-gray-500">Celebrations</p>
             </div>
-            <div className="text-center p-3 bg-white/5 rounded-lg">
-              <p className="text-2xl font-bold gradient-text">{users.length}</p>
+            <div className="text-center p-3 bg-purple-50 rounded-lg">
+              <p className="text-2xl font-bold text-purple-600">{profiles.length}</p>
               <p className="text-xs text-gray-500">Team Members</p>
             </div>
           </div>
         </div>
 
-        {/* Pending Nominations */}
-        <div className="glass-card border-orange-500/30">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-white text-sm">
+        {/* Company Values - Compact */}
+        <div className="glass-card p-4">
+          <div className="flex items-center gap-2.5 mb-3">
+            <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
+              <Star className="w-4 h-4 text-amber-600" />
+            </div>
+            <h3 className="font-semibold text-gray-900">Company Values</h3>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {companyValues.map((value) => (
+              <div
+                key={value.name}
+                title={value.name}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full ${value.bg} ${value.color} text-xs font-medium`}
+              >
+                {value.icon}
+                <span>{value.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Pending Nominations - at bottom */}
+        <div className="glass-card p-4 border-orange-200 mt-auto">
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-gray-900">
               Pending Approval
             </h3>
-            <span className="w-6 h-6 rounded-full bg-orange-500/20 text-orange-400 text-xs flex items-center justify-center font-bold">
+            <span className="w-7 h-7 rounded-full bg-orange-100 text-orange-600 text-sm flex items-center justify-center font-bold">
               {nominations.filter((n) => n.status === "pending").length}
             </span>
           </div>
-          <p className="text-xs text-gray-500">
-            Nominations waiting to be reviewed by managers
+          <p className="text-xs text-gray-500 mt-1">
+            Awaiting review
           </p>
         </div>
       </div>

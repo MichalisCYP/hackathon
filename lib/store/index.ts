@@ -1,11 +1,6 @@
-export { useAppStore, badges, mockUsers } from "./useAppStore";
+export { useAppStore } from "./useAppStore";
+export type { Profile, Badge, Nomination, Reaction, Comment, CommentLike, Notification } from "./useAppStore";
 export type {
-  User,
   UserRole,
-  Badge,
-  BadgeCategory,
-  Nomination,
-  Reaction,
-  DailyChallenge,
   NotificationSettings,
 } from "./types";

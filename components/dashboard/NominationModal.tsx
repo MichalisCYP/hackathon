@@ -2,42 +2,43 @@
 
 import React, { useState } from "react";
 import { X, Rocket, ChevronDown, Sparkles } from "lucide-react";
-import { useAppStore, badges } from "@/lib/store";
-import { BadgeCategory } from "@/lib/store/types";
+import { useAppStore } from "@/lib/store";
 
 export function NominationModal() {
   const {
     isNominationModalOpen,
     setNominationModalOpen,
-    users,
-    currentUser,
+    profiles,
+    badges,
+    currentProfile,
     sendNomination,
   } = useAppStore();
 
   const [selectedUserId, setSelectedUserId] = useState<string>("");
-  const [selectedBadge, setSelectedBadge] = useState<BadgeCategory | null>(
-    null,
-  );
+  const [selectedBadgeId, setSelectedBadgeId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const otherUsers = users.filter((u) => u.id !== currentUser?.id);
+  const otherUsers = profiles.filter((u) => u.id !== currentProfile?.id);
   const selectedUser = otherUsers.find((u) => u.id === selectedUserId);
 
-  const handleSubmit = () => {
-    if (!selectedUserId || !selectedBadge || !message.trim()) return;
+  const handleSubmit = async () => {
+    if (!selectedUserId || !selectedBadgeId || !message.trim()) return;
 
-    sendNomination(selectedUserId, selectedBadge, message);
+    setIsSubmitting(true);
+    await sendNomination(selectedUserId, selectedBadgeId, message);
+    setIsSubmitting(false);
 
     // Reset form
     setSelectedUserId("");
-    setSelectedBadge(null);
+    setSelectedBadgeId(null);
     setMessage("");
     setNominationModalOpen(false);
   };
 
   const isFormValid =
-    selectedUserId && selectedBadge && message.trim().length > 10;
+    selectedUserId && selectedBadgeId && message.trim().length > 10;
 
   if (!isNominationModalOpen) return null;
 
@@ -45,64 +46,59 @@ export function NominationModal() {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm"
+        className="absolute inset-0 bg-gray-900/50 backdrop-blur-sm"
         onClick={() => setNominationModalOpen(false)}
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-lg glass-card border-purple-500/20 glow-purple animate-in fade-in zoom-in duration-200">
-        {/* Background gradient */}
-        <div className="absolute -top-20 -right-20 w-64 h-64 bg-purple-600/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-20 -left-20 w-48 h-48 bg-cyan-600/20 rounded-full blur-3xl pointer-events-none" />
-
+      <div className="relative w-full max-w-lg bg-white border border-gray-200 rounded-2xl shadow-2xl p-5 animate-in fade-in zoom-in duration-200 max-h-[90vh] overflow-y-auto">
         {/* Close button */}
         <button
           onClick={() => setNominationModalOpen(false)}
-          className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/10 transition-colors text-gray-400 hover:text-white"
+          className="absolute top-3 right-3 p-1.5 rounded-full hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-600"
+          title="Close modal"
+          aria-label="Close modal"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Header */}
-        <div className="text-center mb-8 relative">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl gradient-button flex items-center justify-center">
-            <Sparkles className="w-8 h-8 text-white" />
+        <div className="flex items-center gap-3 mb-5 relative">
+          <div className="w-10 h-10 rounded-xl gradient-button flex items-center justify-center flex-shrink-0">
+            <Sparkles className="w-5 h-5 text-white" />
           </div>
-          <h2 className="text-2xl font-bold gradient-text">Send Recognition</h2>
-          <p className="text-gray-400 mt-2">Celebrate someone's great work</p>
+          <div>
+            <h2 className="text-lg font-bold text-gray-900">Send Recognition</h2>
+            <p className="text-gray-500 text-sm">Celebrate someone's great work</p>
+          </div>
         </div>
 
         {/* Form */}
-        <div className="space-y-6 relative">
+        <div className="space-y-4 relative">
           {/* User Selection - "I want to nominate..." */}
           <div>
-            <label className="block text-sm text-gray-400 mb-2">
+            <label className="block text-xs font-medium text-gray-500 mb-1.5">
               I want to nominate...
             </label>
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-                className="w-full flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10 hover:border-purple-500/30 transition-colors text-left"
+                className="w-full flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-200 hover:border-purple-300 transition-colors text-left"
               >
                 {selectedUser ? (
                   <div className="flex items-center gap-3">
                     <img
-                      src={selectedUser.avatar}
-                      alt={selectedUser.name}
+                      src={selectedUser.avatar_url}
+                      alt={selectedUser.username}
                       className="w-8 h-8 rounded-full"
                     />
-                    <div>
-                      <p className="font-medium text-white">
-                        {selectedUser.name}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {selectedUser.department}
-                      </p>
-                    </div>
+                    <p className="font-medium text-gray-900">
+                      {selectedUser.username}
+                    </p>
                   </div>
                 ) : (
-                  <span className="text-gray-500">Select a colleague...</span>
+                  <span className="text-gray-400">Select a colleague...</span>
                 )}
                 <ChevronDown
                   className={`w-5 h-5 text-gray-400 transition-transform ${isUserDropdownOpen ? "rotate-180" : ""}`}
@@ -111,7 +107,7 @@ export function NominationModal() {
 
               {/* Dropdown */}
               {isUserDropdownOpen && (
-                <div className="absolute z-10 w-full mt-2 py-2 bg-slate-800 border border-white/10 rounded-xl shadow-xl max-h-60 overflow-y-auto">
+                <div className="absolute z-10 w-full mt-2 py-2 bg-white border border-gray-200 rounded-xl shadow-xl max-h-60 overflow-y-auto">
                   {otherUsers.map((user) => (
                     <button
                       key={user.id}
@@ -120,19 +116,14 @@ export function NominationModal() {
                         setSelectedUserId(user.id);
                         setIsUserDropdownOpen(false);
                       }}
-                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors text-left"
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
                     >
                       <img
-                        src={user.avatar}
-                        alt={user.name}
+                        src={user.avatar_url}
+                        alt={user.username}
                         className="w-8 h-8 rounded-full"
                       />
-                      <div>
-                        <p className="font-medium text-white">{user.name}</p>
-                        <p className="text-xs text-gray-500">
-                          {user.department}
-                        </p>
-                      </div>
+                      <p className="font-medium text-gray-900">{user.username}</p>
                     </button>
                   ))}
                 </div>
@@ -142,29 +133,28 @@ export function NominationModal() {
 
           {/* Badge Selection - "For the value of..." */}
           <div>
-            <label className="block text-sm text-gray-400 mb-2">
+            <label className="block text-xs font-medium text-gray-500 mb-1.5">
               For the value of...
             </label>
-            <div className="grid grid-cols-2 gap-3">
-              {(Object.keys(badges) as BadgeCategory[]).map((badgeId) => {
-                const badge = badges[badgeId];
-                const isSelected = selectedBadge === badgeId;
+            <div className="grid grid-cols-2 gap-2">
+              {badges.map((badge) => {
+                const isSelected = selectedBadgeId === badge.id;
 
                 return (
                   <button
-                    key={badgeId}
+                    key={badge.id}
                     type="button"
-                    onClick={() => setSelectedBadge(badgeId)}
-                    className={`flex items-center gap-3 p-4 rounded-xl border transition-all duration-200
+                    onClick={() => setSelectedBadgeId(badge.id)}
+                    className={`flex items-center gap-2 p-3 rounded-xl border transition-all duration-200
                       ${
                         isSelected
-                          ? "bg-white/10 border-purple-500/50 glow-purple"
-                          : "bg-white/5 border-white/10 hover:border-white/20"
+                          ? "bg-purple-50 border-purple-300 shadow-sm"
+                          : "bg-gray-50 border-gray-200 hover:border-gray-300"
                       }`}
                   >
                     <span className="text-2xl">{badge.icon}</span>
                     <span
-                      className={`font-medium ${isSelected ? badge.color : "text-gray-300"}`}
+                      className={`font-medium ${isSelected ? badge.color : "text-gray-600"}`}
                     >
                       {badge.name}
                     </span>
@@ -176,16 +166,16 @@ export function NominationModal() {
 
           {/* Message - "Because..." */}
           <div>
-            <label className="block text-sm text-gray-400 mb-2">
+            <label className="block text-xs font-medium text-gray-500 mb-1.5">
               Because...
             </label>
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Share the story behind this recognition..."
-              className="w-full h-32 p-4 bg-transparent border-b-2 border-white/20 focus:border-purple-500 outline-none resize-none text-white placeholder:text-gray-600 transition-colors"
+              className="w-full h-20 p-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 outline-none resize-none text-gray-900 placeholder:text-gray-400 transition-colors text-sm"
             />
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-gray-400 mt-1">
               {message.length}/500 characters (min 10)
             </p>
           </div>
@@ -194,16 +184,16 @@ export function NominationModal() {
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={!isFormValid}
-            className={`w-full flex items-center justify-center gap-2 p-4 rounded-xl font-semibold transition-all duration-300
+            disabled={!isFormValid || isSubmitting}
+            className={`w-full flex items-center justify-center gap-2 p-3 rounded-xl font-semibold transition-all duration-300
               ${
-                isFormValid
-                  ? "gradient-button text-white glow-purple hover:scale-[1.02]"
-                  : "bg-white/5 text-gray-500 cursor-not-allowed"
+                isFormValid && !isSubmitting
+                  ? "gradient-button text-white shadow-lg hover:scale-[1.02]"
+                  : "bg-gray-100 text-gray-400 cursor-not-allowed"
               }`}
           >
             <Rocket className="w-5 h-5" />
-            Send to Orbit
+            {isSubmitting ? "Sending..." : "Send to Orbit"}
           </button>
         </div>
       </div>

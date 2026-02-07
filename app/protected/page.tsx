@@ -24,7 +24,14 @@ export default function ProtectedPage() {
     <Suspense
       fallback={
         <div className="flex-1 flex items-center justify-center">
-          <div className="animate-pulse text-gray-400">Loading...</div>
+          <div className="flex flex-col items-center gap-4">
+            <img 
+              src="/logo.png" 
+              alt="Loading" 
+              className="w-20 h-20 object-contain animate-pulse"
+            />
+            <p className="text-gray-500 text-sm">Loading...</p>
+          </div>
         </div>
       }
     >

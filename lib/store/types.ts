@@ -1,23 +1,23 @@
 // Types for the Unifying Services Employee Recognition Platform
+// These types match the Supabase database schema
 
 export type UserRole = "employee" | "manager" | "admin";
 
-export type BadgeCategory = "innovation" | "teamwork" | "customer" | "speed";
-
-export interface User {
+export interface Profile {
   id: string;
-  name: string;
+  username: string;
   email: string;
-  avatar: string;
-  role: UserRole;
+  avatar_url: string;
+  job_title: string;  // "employee", "admin", "Team Member", etc.
   department: string;
-  level: number;
-  xp: number;
-  joinedAt: string;
+  kudos_balance: number;
+  birthday?: string;  // ISO date string e.g. "1990-05-15"
+  work_anniversary?: string;  // ISO date string e.g. "2022-03-01"
+  created_at: string;
 }
 
 export interface Badge {
-  id: BadgeCategory;
+  id: string;
   name: string;
   icon: string;
   color: string;
@@ -26,34 +26,26 @@ export interface Badge {
 
 export interface Nomination {
   id: string;
-  senderId: string;
-  receiverId: string;
-  sender: User;
-  receiver: User;
-  badge: Badge;
+  sender_id: string;
+  receiver_id: string;
+  badge_id: string;
   message: string;
-  status: "pending" | "approved" | "rejected";
-  reactions: Reaction[];
-  createdAt: string;
-  approvedAt?: string;
-  approvedBy?: string;
+  status?: "pending" | "approved" | "rejected";  // Optional - column may not exist
+  created_at: string;
+  approved_at?: string;
+  approved_by?: string;
+  // Joined data from related tables
+  sender?: Profile;
+  receiver?: Profile;
+  badge?: Badge;
 }
 
 export interface Reaction {
   id: string;
-  nominationId: string;
-  userId: string;
+  nomination_id: string;
+  user_id: string;
   type: "heart" | "clap" | "fire" | "rocket";
-  createdAt: string;
-}
-
-export interface DailyChallenge {
-  id: string;
-  title: string;
-  description: string;
-  xpReward: number;
-  badge?: Badge;
-  expiresAt: string;
+  created_at: string;
 }
 
 export interface NotificationSettings {
